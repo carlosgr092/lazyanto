@@ -180,6 +180,60 @@
   border: 1px solid rgba(243, 156, 18, 0.3);
 }
 
+/* ─── Footer: export button + progress ───────────────────────── */
+#lzy-footer {
+  padding: 8px 6px 10px;
+  border-top: 1px solid #2d2e30;
+  flex-shrink: 0;
+}
+
+#lzy-export {
+  width: 100%;
+  background: #1877f2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  letter-spacing: 0.2px;
+}
+#lzy-export:hover:not(:disabled) { background: #1565d8; }
+#lzy-export:disabled { opacity: 0.6; cursor: default; }
+
+#lzy-progress {
+  margin-bottom: 8px;
+}
+#lzy-progress-bar {
+  height: 4px;
+  background: #3a3b3c;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+#lzy-progress-fill {
+  height: 100%;
+  background: #1877f2;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+#lzy-progress-txt {
+  font-size: 11px;
+  color: #b0b3b8;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Item without detected ID (can't export) */
+.lzy-item.lzy-no-id {
+  opacity: 0.6;
+}
+
 /* Remove button in panel */
 .lzy-rm {
   background: none;
