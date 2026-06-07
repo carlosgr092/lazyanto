@@ -1,0 +1,279 @@
+/* ═══════════════════════════════════════════════════════════════
+   Lazyanto — right panel + row controls
+   Dark theme matching Meta Business Suite
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Panel container ────────────────────────────────────────── */
+#lzy-panel {
+  position: fixed;
+  top: 56px;
+  right: 0;
+  width: 290px;
+  height: calc(100vh - 56px);
+  background: #18191a;
+  border-left: 1px solid #2d2e30;
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  box-shadow: -3px 0 20px rgba(0, 0, 0, 0.5);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Collapsed: slide right, only the toggle button shows (38px) */
+#lzy-panel.lzy-mini {
+  transform: translateX(calc(100% - 38px));
+}
+
+/* ─── Header ─────────────────────────────────────────────────── */
+#lzy-hdr {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  height: 44px;
+  background: #242526;
+  border-bottom: 1px solid #2d2e30;
+  flex-shrink: 0;
+}
+
+#lzy-toggle {
+  background: none;
+  border: none;
+  color: #b0b3b8;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 5px 7px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+  line-height: 1;
+}
+#lzy-toggle:hover { background: #3a3b3c; color: #e4e6eb; }
+
+#lzy-ttl {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  color: #e4e6eb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lzy-badge {
+  background: #1877f2;
+  color: #fff;
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+#lzy-clear {
+  background: none;
+  border: none;
+  color: #b0b3b8;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 5px 7px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+#lzy-clear:hover { background: rgba(255, 77, 77, 0.15); color: #ff6b6b; }
+
+/* ─── Body / scroll area ─────────────────────────────────────── */
+#lzy-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: #3a3b3c transparent;
+}
+#lzy-body::-webkit-scrollbar { width: 4px; }
+#lzy-body::-webkit-scrollbar-thumb {
+  background: #3a3b3c;
+  border-radius: 2px;
+}
+
+#lzy-empty {
+  color: #65676b;
+  font-size: 12px;
+  text-align: center;
+  padding: 40px 16px;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ─── Selected items in panel ────────────────────────────────── */
+.lzy-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  margin-bottom: 3px;
+  background: #242526;
+  transition: background 0.12s;
+}
+.lzy-item:hover { background: #2d2e30; }
+
+.lzy-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  background-color: #3a3b3c;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.lzy-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.lzy-ititle {
+  font-size: 12px;
+  color: #e4e6eb;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.lzy-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  width: fit-content;
+}
+
+.lzy-no-tag {
+  font-size: 10px;
+  color: #555;
+  font-style: italic;
+}
+
+/* Tag colors */
+.lzy-tag-kamikaze {
+  background: rgba(255, 77,  77,  0.15);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 77, 77, 0.3);
+}
+.lzy-tag-tiradera {
+  background: rgba(155, 89,  182, 0.15);
+  color: #c09fdf;
+  border: 1px solid rgba(155, 89, 182, 0.3);
+}
+.lzy-tag-xd {
+  background: rgba(243, 156, 18,  0.15);
+  color: #f5b942;
+  border: 1px solid rgba(243, 156, 18, 0.3);
+}
+
+/* Remove button in panel */
+.lzy-rm {
+  background: none;
+  border: none;
+  color: #65676b;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  align-self: center;
+  transition: color 0.12s, background 0.12s;
+}
+.lzy-rm:hover {
+  color: #ff4d4d;
+  background: rgba(255, 77, 77, 0.12);
+}
+
+/* ─── Controls injected into each Business Suite row ─────────── */
+
+/* Todos los rows procesados son contextos de posicionamiento */
+[data-lzy] {
+  position: relative !important;
+}
+
+/* El ctrl flota absolutamente en el espacio de padding-left
+   que creamos en el contenedor de la tabla (112px) */
+.lzy-ctrl {
+  position: absolute;
+  left: -110px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 106px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 4px;
+  z-index: 99;
+  /* Fondo sutil para legibilidad sobre cualquier color de fila */
+  background: rgba(24, 25, 26, 0.0);
+}
+
+/* Custom checkbox */
+.lzy-chk {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+  background: transparent;
+  flex-shrink: 0;
+  margin: 0;
+  transition: border-color 0.15s, background 0.15s;
+  position: relative;
+}
+.lzy-chk:hover { border-color: #1877f2; }
+.lzy-chk:checked {
+  background: #1877f2;
+  border-color: #1877f2;
+  /* checkmark via SVG data URL */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M1.5 6l3 3 6-6' stroke='white' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size: 11px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Dropdown */
+.lzy-sel {
+  appearance: none;
+  -webkit-appearance: none;
+  background: #2d2e30;
+  color: #e4e6eb;
+  border: 1px solid #3a3b3c;
+  border-radius: 5px;
+  padding: 3px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  outline: none;
+  width: 82px;
+  transition: border-color 0.15s;
+}
+.lzy-sel:hover { border-color: #65676b; }
+.lzy-sel:focus { border-color: #1877f2; box-shadow: 0 0 0 2px rgba(24,119,242,0.25); }
+
+/* Inline tag badge on rows (shown after selecting a label) */
+.lzy-row-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}

@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Lazyanto",
+  "version": "1.0.0",
+  "description": "Marca y organiza publicaciones de Meta Business Suite",
+  "permissions": ["storage"],
+  "host_permissions": ["https://business.facebook.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://business.facebook.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {}
+}
