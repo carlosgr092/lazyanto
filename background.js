@@ -111,6 +111,44 @@ function delay(ms) {
 // ─── Extractor — runs inside the detail page tab ──────────────────────────────
 // Must be self-contained (no closures over external vars)
 function extractDetailData() {
+  const unwrapMetric = (value) => {
+    if (value == null) return null;
+    if (typeof value === 'number' || typeof value === 'string') return value;
+    if (typeof value !== 'object') return null;
+
+    const valueKeys = ['value', 'count', 'total', 'amount', 'text', 'formatted_value', 'formattedValue'];
+    for (const key of valueKeys) {
+      if (value[key] != null && typeof value[key] !== 'object') return value[key];
+    }
+
+    return null;
+  };
+
+  const pickMetric = (obj, keys) => {
+    if (!obj || typeof obj !== 'object') return null;
+    for (const key of keys) {
+      if (obj[key] == null) continue;
+      const metric = unwrapMetric(obj[key]);
+      if (metric != null) return metric;
+    }
+    return null;
+  };
+
+  const mergeMetrics = (target, source) => {
+    if (!source || typeof source !== 'object') return;
+    const mappings = {
+      views: ['views', 'view_count', 'views_count', 'video_views', 'video_view_count', 'post_views', 'reels_plays', 'plays', 'play_count'],
+      viewers: ['viewers', 'viewer_count', 'reach', 'people_reached', 'unique_viewers', 'unique_views'],
+      interactions: ['net_interaction', 'interactions', 'interaction_count', 'engagement', 'engagements', 'post_engagement']
+    };
+
+    for (const [field, keys] of Object.entries(mappings)) {
+      if (target[field] != null) continue;
+      const metric = pickMetric(source, keys);
+      if (metric != null) target[field] = metric;
+    }
+  };
+
   const extractPageNameFromFeedPreview = () => {
     const labelRe = /^(Vista previa del feed|Feed preview)$/i;
     const bad = /^(Vista previa del feed|Feed preview|Meta Business Suite|Insights|Estad[ií]sticas|Contenido|Publicaciones|Posts|Facebook|Instagram|Martin Rodriguez|Me gusta|Comentar|Compartir|Like|Comment|Share|Ver m[aá]s|See more)$/i;
@@ -173,6 +211,7 @@ function extractDetailData() {
     try { data = JSON.parse(script.textContent); } catch (e) { continue; }
 
     let insights = null;
+    const metrics = {};
     let entityInfo = null;
     const seen = new WeakSet();
 
@@ -180,22 +219,32 @@ function extractDetailData() {
       if (!obj || typeof obj !== 'object' || seen.has(obj)) return;
       seen.add(obj);
 
-      if (obj.__typename === 'TofuFBPostEntityInsights' && obj.views !== undefined) {
+      mergeMetrics(metrics, obj);
+
+      const typename = String(obj.__typename || '');
+      const looksLikeInsights =
+        /Insights|Metric|Video|Reel/i.test(typename) ||
+        obj.views !== undefined ||
+        obj.video_views !== undefined ||
+        obj.reels_plays !== undefined;
+
+      if (!insights && looksLikeInsights && (metrics.views != null || metrics.interactions != null)) {
         insights = obj;
       }
-      if (!entityInfo && obj.title && obj.image_source && obj.created_at) {
+
+      if (!entityInfo && obj.title && (obj.image_source || obj.created_at || obj.media_type || obj.video_source)) {
         entityInfo = {
           title: obj.title,
           imageUri: obj.image_source?.uri || '',
           createdAt: obj.created_at,
-          mediaType: obj.media_type || ''
+          mediaType: obj.media_type || obj.content_type || obj.__typename || ''
         };
       }
 
-      if (insights && entityInfo) return;
+      if (insights && entityInfo && metrics.views != null) return;
 
       for (const k of Object.keys(obj)) {
-        if (insights && entityInfo) break;
+        if (insights && entityInfo && metrics.views != null) break;
         try { walk(obj[k]); } catch (e) {}
       }
     };
@@ -211,11 +260,9 @@ function extractDetailData() {
 
     return {
       pageName: extractPageNameFromFeedPreview(),
-      views: insights.views?.value ?? null,
-      viewers: insights.viewers?.value ?? null,
-      interactions: insights.net_interaction?.value ?? null,
-      linkClicks: insights.link_click?.value ?? null,
-      followers: insights.follow?.value ?? null,
+      views: metrics.views ?? insights.views?.value ?? null,
+      viewers: metrics.viewers ?? insights.viewers?.value ?? null,
+      interactions: metrics.interactions ?? insights.net_interaction?.value ?? null,
       content: entityInfo?.title || '',
       imageUrl: imgs[0]?.src || entityInfo?.imageUri || '',
       createdAt: entityInfo?.createdAt || null,

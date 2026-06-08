@@ -665,8 +665,7 @@ function setExportUI(state, current, total) {
 function downloadCSV(results) {
   const headers = [
     'Página', 'content_id', 'Fecha', 'Tipo', 'Texto', 'URL imagen',
-    'Visualizaciones', 'Espectadores', 'Interacciones',
-    'Clics enlace', 'Seguidores', 'Marcador'
+    'Visualizaciones', 'Espectadores', 'Interacciones', 'Marcador'
   ];
 
   const rows = results.map(r => [
@@ -679,8 +678,6 @@ function downloadCSV(results) {
     r.views ?? '',
     r.viewers ?? '',
     r.interactions ?? '',
-    r.linkClicks ?? '',
-    r.followers ?? '',
     r.label || ''
   ]);
 
