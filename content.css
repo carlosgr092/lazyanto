@@ -52,14 +52,30 @@
 }
 #lzy-toggle:hover { background: #3a3b3c; color: #e4e6eb; }
 
-#lzy-ttl {
+#lzy-headtext {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+#lzy-ttl {
   font-size: 13px;
   font-weight: 700;
   color: #e4e6eb;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+#lzy-page {
+  font-size: 11px;
+  color: #b0b3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 14px;
 }
 
 .lzy-badge {
@@ -88,8 +104,11 @@
 /* ─── Body / scroll area ─────────────────────────────────────── */
 #lzy-body {
   flex: 1;
-  overflow-y: auto;
+  min-height: 0;
+  overflow: hidden;
   padding: 6px;
+  display: flex;
+  flex-direction: column;
   scrollbar-width: thin;
   scrollbar-color: #3a3b3c transparent;
 }
@@ -106,6 +125,31 @@
   padding: 40px 16px;
   margin: 0;
   line-height: 1.6;
+}
+
+#lzy-add-current {
+  width: 100%;
+  background: #2d2e30;
+  color: #e4e6eb;
+  border: 1px solid #3a3b3c;
+  border-radius: 8px;
+  padding: 9px 10px;
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+#lzy-add-current:hover {
+  background: #3a3b3c;
+  border-color: #65676b;
+}
+
+#lzy-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 6px;
 }
 
 /* ─── Selected items in panel ────────────────────────────────── */
@@ -146,6 +190,15 @@
   word-break: break-word;
 }
 
+.lzy-ipage {
+  color: #9aa0a6;
+  font-size: 11px;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .lzy-tag {
   display: inline-block;
   font-size: 10px;
@@ -161,6 +214,26 @@
   font-size: 10px;
   color: #555;
   font-style: italic;
+}
+
+.lzy-panel-sel {
+  appearance: none;
+  -webkit-appearance: none;
+  background: #2d2e30;
+  color: #e4e6eb;
+  border: 1px solid #3a3b3c;
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  outline: none;
+  width: 100%;
+  max-width: 150px;
+}
+.lzy-panel-sel:hover { border-color: #65676b; }
+.lzy-panel-sel:focus {
+  border-color: #1877f2;
+  box-shadow: 0 0 0 2px rgba(24,119,242,0.25);
 }
 
 /* Tag colors */
@@ -185,6 +258,7 @@
   padding: 8px 6px 10px;
   border-top: 1px solid #2d2e30;
   flex-shrink: 0;
+  background: #18191a;
 }
 
 #lzy-export {
@@ -258,6 +332,11 @@
 /* Todos los rows procesados son contextos de posicionamiento */
 [data-lzy] {
   position: relative !important;
+  overflow: visible !important;
+}
+
+.lzy-spaced {
+  overflow: visible !important;
 }
 
 /* El ctrl flota absolutamente en el espacio de padding-left
@@ -272,7 +351,7 @@
   align-items: center;
   gap: 5px;
   padding: 0 4px;
-  z-index: 99;
+  z-index: 999999;
   /* Fondo sutil para legibilidad sobre cualquier color de fila */
   background: rgba(24, 25, 26, 0.0);
 }

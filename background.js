@@ -111,6 +111,61 @@ function delay(ms) {
 // ─── Extractor — runs inside the detail page tab ──────────────────────────────
 // Must be self-contained (no closures over external vars)
 function extractDetailData() {
+  const extractPageNameFromFeedPreview = () => {
+    const labelRe = /^(Vista previa del feed|Feed preview)$/i;
+    const bad = /^(Vista previa del feed|Feed preview|Meta Business Suite|Insights|Estad[ií]sticas|Contenido|Publicaciones|Posts|Facebook|Instagram|Martin Rodriguez|Me gusta|Comentar|Compartir|Like|Comment|Share|Ver m[aá]s|See more)$/i;
+    const labels = [...document.querySelectorAll('h1, h2, h3, [role="heading"], span, div')]
+      .filter(el => labelRe.test((el.textContent || '').replace(/\s+/g, ' ').trim()));
+
+    const isCandidate = (text) => {
+      const name = text.replace(/\s+/g, ' ').trim();
+      return (
+        name.length >= 2 &&
+        name.length <= 90 &&
+        !bad.test(name) &&
+        !/^\d/.test(name) &&
+        !/[•·]/.test(name) &&
+        !/^(Crear|Exportar|Agregar|Promocionar|Impulsar|Buscar|Filtrar|Ordenar|Publicado|Published|Patrocinado|Sponsored)/i.test(name)
+      );
+    };
+
+    const textPartsFrom = (el) => {
+      if (!document.createTreeWalker) {
+        return (el.textContent || '')
+          .split(/\n+/)
+          .map(line => line.replace(/\s+/g, ' ').trim())
+          .filter(Boolean);
+      }
+
+      const parts = [];
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      let node;
+      while ((node = walker.nextNode())) {
+        const text = node.nodeValue.replace(/\s+/g, ' ').trim();
+        if (text) parts.push(text);
+      }
+      return parts;
+    };
+
+    for (const label of labels) {
+      let container = label.parentElement;
+      for (let depth = 0; container && container !== document.body && depth < 10; depth++) {
+        const lines = textPartsFrom(container);
+        const labelIndex = lines.findIndex(line => labelRe.test(line));
+
+        if (labelIndex !== -1) {
+          const afterLabel = lines.slice(labelIndex + 1);
+          const direct = afterLabel.find(isCandidate);
+          if (direct) return direct;
+        }
+
+        container = container.parentElement;
+      }
+    }
+
+    return '';
+  };
+
   const scripts = [...document.querySelectorAll('script[type="application/json"]')];
 
   for (const script of scripts) {
@@ -155,6 +210,7 @@ function extractDetailData() {
       .sort((a, b) => (b.naturalWidth * b.naturalHeight) - (a.naturalWidth * a.naturalHeight));
 
     return {
+      pageName: extractPageNameFromFeedPreview(),
       views: insights.views?.value ?? null,
       viewers: insights.viewers?.value ?? null,
       interactions: insights.net_interaction?.value ?? null,
