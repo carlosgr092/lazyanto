@@ -21,9 +21,46 @@
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Collapsed: slide right, only the toggle button shows (38px) */
+/* Collapsed: slide fully off-screen so the page is unobstructed */
 #lzy-panel.lzy-mini {
-  transform: translateX(calc(100% - 38px));
+  transform: translateX(100%);
+  box-shadow: none;
+}
+
+/* ─── Floating tab to re-open the panel when collapsed ────────── */
+#lzy-fab {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  z-index: 999998;
+  display: none;            /* shown only while panel is collapsed */
+  align-items: center;
+  gap: 6px;
+  background: #1877f2;
+  color: #fff;
+  border: none;
+  border-radius: 10px 0 0 10px;
+  padding: 12px 10px 12px 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: -3px 0 14px rgba(0, 0, 0, 0.45);
+  transition: background 0.15s, padding 0.15s;
+  writing-mode: vertical-rl;
+  line-height: 1;
+}
+#lzy-fab.lzy-fab-show { display: flex; }
+#lzy-fab:hover { background: #1565d8; padding-right: 14px; }
+#lzy-fab .lzy-fab-cnt {
+  background: #fff;
+  color: #1877f2;
+  border-radius: 9px;
+  padding: 3px 5px;
+  font-size: 11px;
+  font-weight: 800;
+  writing-mode: horizontal-tb;
 }
 
 /* ─── Header ─────────────────────────────────────────────────── */
@@ -236,21 +273,48 @@
   box-shadow: 0 0 0 2px rgba(24,119,242,0.25);
 }
 
+/* Campo para el nombre de la persona mencionada (solo en "Mención negativa") */
+.lzy-person {
+  appearance: none;
+  -webkit-appearance: none;
+  background: #2d2e30;
+  color: #e4e6eb;
+  border: 1px solid rgba(255, 77, 77, 0.4);
+  border-radius: 5px;
+  padding: 5px 8px;
+  font-size: 11px;
+  outline: none;
+  width: 100%;
+  max-width: 150px;
+  box-sizing: border-box;
+}
+.lzy-person::placeholder { color: #777; }
+.lzy-person:hover { border-color: rgba(255, 77, 77, 0.6); }
+.lzy-person:focus {
+  border-color: #ff6b6b;
+  box-shadow: 0 0 0 2px rgba(255, 77, 77, 0.25);
+}
+
 /* Tag colors */
-.lzy-tag-kamikaze {
-  background: rgba(255, 77,  77,  0.15);
+.lzy-tag-peticion-positiva {
+  background: rgba(46, 204, 113, 0.15);
+  color: #5fd99a;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+}
+.lzy-tag-peticion-kamikaze {
+  background: rgba(243, 156, 18, 0.15);
+  color: #f5b942;
+  border: 1px solid rgba(243, 156, 18, 0.3);
+}
+.lzy-tag-mencion-negativa {
+  background: rgba(255, 77, 77, 0.15);
   color: #ff6b6b;
   border: 1px solid rgba(255, 77, 77, 0.3);
 }
-.lzy-tag-tiradera {
-  background: rgba(155, 89,  182, 0.15);
+.lzy-tag-afectacion {
+  background: rgba(155, 89, 182, 0.15);
   color: #c09fdf;
   border: 1px solid rgba(155, 89, 182, 0.3);
-}
-.lzy-tag-xd {
-  background: rgba(243, 156, 18,  0.15);
-  color: #f5b942;
-  border: 1px solid rgba(243, 156, 18, 0.3);
 }
 
 /* ─── Footer: export button + progress ───────────────────────── */

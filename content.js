@@ -1,13 +1,25 @@
 // Lazyanto — Meta Business Suite post tagger + CSV exporter
 
-const LABELS = ['Kamikaze', 'Tiradera', 'XD'];
+const LABELS = ['Petición Positiva', 'Petición Kamikaze', 'Mención negativa', 'Afectación'];
+const MENTION_LABEL = 'Mención negativa'; // requiere capturar el nombre de la persona mencionada
 const ATTR   = 'data-lzy';
+
+// Convierte un marcador en un sufijo de clase CSS estable (sin acentos ni espacios)
+function labelClass(label) {
+  return (label || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
 let state    = {};  // { [id]: { id, title, img, contentId, checked, label } }
 let debounce = null;
 let cachedParams = null; // { businessId, assetId }
 let cachedPageName = '';
 let scraping = false;
 let lastUrl = location.href;
+let panelCollapsed = false;
 
 // ─── Stable hash ID ──────────────────────────────────────────────────────────
 function hashId(str) {
@@ -498,7 +510,7 @@ function injectPanel() {
   panel.id = 'lzy-panel';
   panel.innerHTML = `
     <div id="lzy-hdr">
-      <button id="lzy-toggle" title="Colapsar / Expandir">◀</button>
+      <button id="lzy-toggle" title="Ocultar panel">▶</button>
       <div id="lzy-headtext">
         <span id="lzy-ttl">🎯 Lazyanto</span>
         <span id="lzy-page" title=""></span>
@@ -521,15 +533,36 @@ function injectPanel() {
   `;
   document.body.appendChild(panel);
 
-  document.getElementById('lzy-toggle').addEventListener('click', () => {
-    panel.classList.toggle('lzy-mini');
-    document.getElementById('lzy-toggle').textContent =
-      panel.classList.contains('lzy-mini') ? '▶' : '◀';
-  });
+  // Pestaña flotante para reabrir el panel cuando está colapsado
+  const fab = document.createElement('button');
+  fab.id = 'lzy-fab';
+  fab.title = 'Abrir Lazyanto';
+  fab.innerHTML = `<span class="lzy-fab-cnt" style="display:none"></span><span>🎯 Lazyanto</span>`;
+  document.body.appendChild(fab);
+
+  document.getElementById('lzy-toggle').addEventListener('click', () => setCollapsed(true));
+  fab.addEventListener('click', () => setCollapsed(false));
 
   document.getElementById('lzy-clear').addEventListener('click', clearAll);
   document.getElementById('lzy-export').addEventListener('click', startExport);
   document.getElementById('lzy-add-current').addEventListener('click', addCurrentDetailPost);
+
+  applyCollapsed();
+}
+
+// ─── Colapsar / expandir la barra lateral ──────────────────────────────────────
+function setCollapsed(collapsed) {
+  panelCollapsed = collapsed;
+  applyCollapsed();
+  saveCollapsed();
+}
+
+function applyCollapsed() {
+  const panel = document.getElementById('lzy-panel');
+  const fab   = document.getElementById('lzy-fab');
+  if (!panel || !fab) return;
+  panel.classList.toggle('lzy-mini', panelCollapsed);
+  fab.classList.toggle('lzy-fab-show', panelCollapsed);
 }
 
 function addCurrentDetailPost() {
@@ -550,6 +583,7 @@ function addCurrentDetailPost() {
     pageName: pageName || previous.pageName || '',
     contentId,
     checked: true,
+    addedAt: Date.now(),
     label: previous.label || ''
   };
 
@@ -573,6 +607,7 @@ function clearAll() {
   Object.keys(state).forEach(id => {
     state[id].checked = false;
     state[id].label   = '';
+    state[id].person  = '';
     const row = document.querySelector(`[${ATTR}="${id}"]`);
     if (!row) return;
     const chk = row.querySelector('.lzy-chk');
@@ -619,7 +654,8 @@ async function startExport() {
         img: p.img,
         pageName: p.pageName || '',
         contentId: p.contentId,
-        label: p.label
+        label: p.label,
+        person: p.person || ''
       })),
       businessId: params.businessId,
       assetId: params.assetId
@@ -664,12 +700,13 @@ function setExportUI(state, current, total) {
 // ─── CSV generation & download ────────────────────────────────────────────────
 function downloadCSV(results) {
   const headers = [
-    'Página', 'content_id', 'Fecha', 'Tipo', 'Texto', 'URL imagen',
+    'Página', 'Mención', 'content_id', 'Fecha', 'Tipo', 'Texto', 'URL imagen',
     'Visualizaciones', 'Espectadores', 'Interacciones', 'Marcador'
   ];
 
   const rows = results.map(r => [
     r.pageName || '',
+    r.person || '',
     r.contentId || '',
     r.createdAt ? new Date(r.createdAt * 1000).toISOString().slice(0, 10) : '',
     r.mediaType || '',
@@ -718,11 +755,18 @@ function renderPanel() {
   const pageEl = document.getElementById('lzy-page');
   if (!list) return;
 
-  const selected = Object.values(state).filter(p => p.checked);
+  const selected = Object.values(state)
+    .filter(p => p.checked)
+    .sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0)); // último agregado arriba
   const pageName = readPageName();
 
   cnt.textContent     = selected.length || '';
   cnt.style.display   = selected.length ? 'inline' : 'none';
+  const fabCnt = document.querySelector('#lzy-fab .lzy-fab-cnt');
+  if (fabCnt) {
+    fabCnt.textContent   = selected.length || '';
+    fabCnt.style.display = selected.length ? 'inline-block' : 'none';
+  }
   if (pageEl) {
     pageEl.textContent = pageName || 'Página no detectada';
     pageEl.title = pageName || '';
@@ -747,6 +791,11 @@ function renderPanel() {
               `<option value="${l}"${p.label === l ? ' selected' : ''}>${l}</option>`
             ).join('')}
           </select>
+          ${p.label === MENTION_LABEL ? `
+          <input class="lzy-person" data-id="${escHtml(p.id)}" type="text"
+                 placeholder="Persona mencionada"
+                 value="${escHtml(p.person || '')}" title="Nombre de la persona mencionada">
+          ` : ''}
         </div>
         <button class="lzy-rm" data-id="${escHtml(p.id)}" title="Quitar">×</button>
       </div>
@@ -758,9 +807,20 @@ function renderPanel() {
       const id = sel.dataset.id;
       if (!state[id]) return;
       state[id].label = sel.value;
+      if (sel.value !== MENTION_LABEL) state[id].person = '';
+      if (!state[id].checked) state[id].addedAt = Date.now();
       state[id].checked = true;
       syncRowControls(id);
       renderPanel();
+      saveState();
+    });
+  });
+
+  list.querySelectorAll('.lzy-person').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const id = inp.dataset.id;
+      if (!state[id]) return;
+      state[id].person = inp.value;
       saveState();
     });
   });
@@ -771,6 +831,7 @@ function renderPanel() {
       if (!state[id]) return;
       state[id].checked = false;
       state[id].label   = '';
+      state[id].person  = '';
       const row = document.querySelector(`[${ATTR}="${id}"]`);
       if (row) {
         const chk = row.querySelector('.lzy-chk');
@@ -805,7 +866,7 @@ function updateRowTag(row, id) {
   const s = state[id];
   if (!s || !s.label) return;
   const tag = document.createElement('span');
-  tag.className = `lzy-row-tag lzy-tag-${s.label.toLowerCase()}`;
+  tag.className = `lzy-row-tag lzy-tag-${labelClass(s.label)}`;
   tag.textContent = s.label;
   if (ctrl) ctrl.appendChild(tag);
 }
@@ -1002,7 +1063,7 @@ function attachRowControls(row, id) {
         `<option value="${l}"${s.label === l ? ' selected' : ''}>${l}</option>`
       ).join('')}
     </select>
-    ${s.label ? `<span class="lzy-row-tag lzy-tag-${s.label.toLowerCase()}">${escHtml(s.label)}</span>` : ''}
+    ${s.label ? `<span class="lzy-row-tag lzy-tag-${labelClass(s.label)}">${escHtml(s.label)}</span>` : ''}
   `;
 
   ctrl.addEventListener('click', e => e.stopPropagation());
@@ -1012,8 +1073,11 @@ function attachRowControls(row, id) {
 
   ctrl.querySelector('.lzy-chk').addEventListener('change', e => {
     state[id].checked = e.target.checked;
-    if (!e.target.checked) {
+    if (e.target.checked) {
+      state[id].addedAt = Date.now();
+    } else {
       state[id].label = '';
+      state[id].person = '';
       ctrl.querySelector('.lzy-sel').value = '';
     }
     updateRowTag(row, id);
@@ -1023,7 +1087,9 @@ function attachRowControls(row, id) {
 
   ctrl.querySelector('.lzy-sel').addEventListener('change', e => {
     state[id].label = e.target.value;
+    if (e.target.value !== MENTION_LABEL) state[id].person = '';
     if (e.target.value) {
+      if (!state[id].checked) state[id].addedAt = Date.now();
       state[id].checked = true;
       ctrl.querySelector('.lzy-chk').checked = true;
     }
@@ -1078,6 +1144,7 @@ function removeListingControls() {
 
 function removePanel() {
   document.getElementById('lzy-panel')?.remove();
+  document.getElementById('lzy-fab')?.remove();
 }
 
 function cleanupUnsupportedPage() {
@@ -1134,6 +1201,21 @@ async function loadState() {
   }
 }
 
+async function saveCollapsed() {
+  try {
+    await chrome.storage.local.set({ lzyCollapsed: panelCollapsed });
+  } catch (e) {}
+}
+
+async function loadCollapsed() {
+  try {
+    const { lzyCollapsed } = await chrome.storage.local.get('lzyCollapsed');
+    panelCollapsed = !!lzyCollapsed;
+  } catch (e) {
+    panelCollapsed = false;
+  }
+}
+
 // ─── Scan & observe ───────────────────────────────────────────────────────────
 function scan() {
   if (lastUrl !== location.href) {
@@ -1165,6 +1247,7 @@ const observer = new MutationObserver(() => {
 // ─── Init ─────────────────────────────────────────────────────────────────────
 async function init() {
   await loadState();
+  await loadCollapsed();
   scan();
   observer.observe(document.body, { childList: true, subtree: true });
   setInterval(scan, 1500);
